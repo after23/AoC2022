@@ -50,7 +50,7 @@ func (head *NineHead) steps(direction string, sign int) {
 	for i := 1; i < len(head); i++ {
 		if i == len(head)-1 {
 			head[i].follow(head[i-1], 2)
-			continue
+			return
 		}
 		head[i].follow(head[i-1], 3)
 	}
@@ -128,11 +128,16 @@ func updateVisitedPos(x, y, choice int) {
 	}
 }
 
-func move(direction string, steps int, head *Point, tail *Point) {
+func sign(direction string) int {
 	sign := 1
 	if direction == "D" || direction == "L" {
 		sign = -1
 	}
+	return sign
+}
+
+func move(direction string, steps int, head *Point, tail *Point) {
+	sign := sign(direction)
 
 	for i := 1; i <= steps; i++ {
 		head.step(direction, sign)
@@ -141,10 +146,7 @@ func move(direction string, steps int, head *Point, tail *Point) {
 }
 
 func partTwoMove(direction string, steps int, head *NineHead) {
-	sign := 1
-	if direction == "D" || direction == "L" {
-		sign = -1
-	}
+	sign := sign(direction)
 
 	for i := 0; i < steps; i++ {
 		head[0].step(direction, sign)
