@@ -11,11 +11,6 @@ import (
 
 var x int = 1
 
-const (
-	WIDE   = 40
-	HEIGHT = 6
-)
-
 type Sprite struct {
 	position [3]int
 }
@@ -80,13 +75,16 @@ func addLine(sprite Sprite, line string) string {
 func main() {
 	f, err := os.Open("input.in")
 	handleErr(err)
+	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+
 	cycle := 1
 	sum := 0
 	var line string
 	var sprite Sprite
 	sprite.newSprite()
+
 	fmt.Println("Part 2:")
 	for scanner.Scan() {
 		input := strings.Split(scanner.Text(), " ")
