@@ -11,12 +11,13 @@ import (
 )
 
 type Monke struct {
-	items        []int
-	operation    func(int) int
-	test         func(int) bool
+	items        []int64
+	operation    func(int64) int64
+	test         func(int64) bool
 	testTrue     int
 	testFalse    int
-	inspectCount int
+	inspectCount int64
+	divisors     int64
 }
 
 type Monkeys []*Monke
@@ -25,11 +26,11 @@ func (monke *Monke) pop() {
 	monke.items = monke.items[1:]
 }
 
-func (monke *Monke) push(item int) {
+func (monke *Monke) push(item int64) {
 	monke.items = append(monke.items, item)
 }
 
-func (monkeys Monkeys) evaluateTest(i, item, testTrue, testFalse int) {
+func (monkeys Monkeys) evaluateTest(i, testTrue, testFalse int, item int64) {
 	if monkeys[i].test(item) {
 		monkeys[testTrue].push(item)
 	} else {
@@ -38,23 +39,34 @@ func (monkeys Monkeys) evaluateTest(i, item, testTrue, testFalse int) {
 	monkeys[i].inspectCount++
 }
 
-func (monkeys Monkeys) examine() {
+func (monkeys Monkeys) examine(n int64) {
 	for i, val := range monkeys {
 		for _, item := range val.items {
 			item = val.operation(item)
-			item /= 3
-			monkeys.evaluateTest(i, item, val.testTrue, val.testFalse)
+			item %= n
+			// fmt.Println(item)
+			monkeys.evaluateTest(i, val.testTrue, val.testFalse, item)
 			val.pop()
 		}
 	}
 }
 
-func monkeBusiness(monkeys Monkeys) int {
-	var inspectCounts []int
+func (monkeys Monkeys) elp() int64 {
+	var res int64 = 1
+	for _, val := range monkeys {
+		res *= val.divisors
+	}
+	return res
+}
+
+func monkeBusiness(monkeys Monkeys) int64 {
+	var inspectCounts []int64
 	for _, monke := range monkeys {
 		inspectCounts = append(inspectCounts, monke.inspectCount)
 	}
-	sort.Ints(inspectCounts)
+	sort.Slice(inspectCounts, func(i, j int) bool { return inspectCounts[i] < inspectCounts[j] })
+	fmt.Println(inspectCounts)
+	// sort.Ints(inspectCounts)
 	return inspectCounts[len(inspectCounts)-1] * inspectCounts[len(inspectCounts)-2]
 }
 
@@ -66,7 +78,8 @@ func handleErr(err error) {
 
 func (monkeys Monkeys) addItems(idx int, items []string) {
 	for _, item := range items {
-		itemInt, err := strconv.Atoi(strings.TrimSpace(item))
+		// itemInt, err := strconv.Atoi(strings.TrimSpace(item))
+		itemInt, err := strconv.ParseInt(strings.TrimSpace(item), 10, 64)
 		handleErr(err)
 		monkeys[idx].push(itemInt)
 	}
@@ -75,13 +88,14 @@ func (monkeys Monkeys) addItems(idx int, items []string) {
 func (monke *Monke) plusOperation(param string) {
 	switch param {
 	case "old":
-		monke.operation = func(item int) int {
+		monke.operation = func(item int64) int64 {
 			return item + item
 		}
 	default:
-		paramInt, err := strconv.Atoi(param)
+		// paramInt, err := strconv.Atoi(param)
+		paramInt, err := strconv.ParseInt(strings.TrimSpace(param), 10, 64)
 		handleErr(err)
-		monke.operation = func(item int) int {
+		monke.operation = func(item int64) int64 {
 			return item + paramInt
 		}
 	}
@@ -90,13 +104,14 @@ func (monke *Monke) plusOperation(param string) {
 func (monke *Monke) sumOperation(param string) {
 	switch param {
 	case "old":
-		monke.operation = func(item int) int {
+		monke.operation = func(item int64) int64 {
 			return item * item
 		}
 	default:
-		paramInt, err := strconv.Atoi(param)
+		// paramInt, err := strconv.Atoi(param)
+		paramInt, err := strconv.ParseInt(strings.TrimSpace(param), 10, 64)
 		handleErr(err)
-		monke.operation = func(item int) int {
+		monke.operation = func(item int64) int64 {
 			return item * paramInt
 		}
 	}
@@ -123,10 +138,11 @@ func (monkeys Monkeys) addOperation(idx int, input string) {
 	monkeys[idx].setOperation(param, operator)
 }
 
-func (monke *Monke) setTest(param int) {
-	monke.test = func(item int) bool {
+func (monke *Monke) setTest(param int64) {
+	monke.test = func(item int64) bool {
 		return item%param == 0
 	}
+	monke.divisors = param
 }
 
 func main() {
@@ -159,7 +175,8 @@ func main() {
 		if strings.Contains(input, "Test") {
 			lines := strings.Split(input, "by")
 			param := strings.TrimSpace(lines[1])
-			paramInt, err := strconv.Atoi(param)
+			// paramInt, err := strconv.Atoi(param)
+			paramInt, err := strconv.ParseInt(strings.TrimSpace(param), 10, 64)
 			handleErr(err)
 			monkeys[idx].setTest(paramInt)
 			continue
@@ -179,8 +196,10 @@ func main() {
 			continue
 		}
 	}
-	for i := 0; i < 20; i++ {
-		monkeys.examine()
+	n := monkeys.elp()
+	for i := 0; i < 10000; i++ {
+		monkeys.examine(n)
 	}
-	fmt.Println("Part 1 :", monkeBusiness(monkeys))
+
+	fmt.Println("Part 2 :", monkeBusiness(monkeys))
 }
