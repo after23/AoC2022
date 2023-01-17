@@ -44,7 +44,6 @@ func (monkeys Monkeys) examine(n int64) {
 		for _, item := range val.items {
 			item = val.operation(item)
 			item %= n
-			// fmt.Println(item)
 			monkeys.evaluateTest(i, val.testTrue, val.testFalse, item)
 			val.pop()
 		}
