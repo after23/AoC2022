@@ -142,6 +142,7 @@ func minDist(queue *[]qItem, visitedItem [][]bool, intInput *[][]int) int {
 		}
 
 		if len(*queue) == 0 {
+			resetVisited(visitedItem)
 			return maxInt
 		}
 	}
