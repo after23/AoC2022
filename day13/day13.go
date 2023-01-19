@@ -75,13 +75,119 @@ func (signalL *signalList) insert(rawInput string) {
 	}
 }
 
+// SkipToNextValidSignal is used to return the index of the next signal with valid packets // Skip signals that has -1 as packet's value
+func (signals signalList) skipToNextValidSignal(index int) int {
+	if len(signals[index].packets) == 0 {
+		return 0
+	}
+	signal := signals[index]
+	if !signal.isSkipSignal() {
+		return index
+	}
+	index++
+	for index < len(signals) {
+		signal = signals[index]
+		if !signal.isSkipSignal() {
+			return index
+		}
+		index++
+	}
+	return index
+}
+
+// isSkipSignal is used to check if a signal's packet is valid or not
+// non valid packet has value of -1
+func (signal signal) isSkipSignal() bool {
+	if signal.packets[0] == -1 {
+		return true
+	}
+	return false
+}
+
+// 1 = ordered
+// 2 = false ordered
+// 3 = lanjut
+func isPacketOrdered(firstIndex, secondIndex, max int) int {
+	firstPacket := firstSignal[firstIndex].packets
+	secondPacket := secondSignal[secondIndex].packets
+	for i := 0; i < max; i++ {
+		firstItem := firstPacket[i]
+		secondItem := secondPacket[i]
+		// false ordered
+		if secondItem < firstItem {
+			return 2
+		}
+		// ordered
+		if firstItem < secondItem {
+			return 1
+		}
+	}
+	// first signal run out of item so it is ordered
+	if max == len(firstPacket) && max != len(secondPacket) {
+		return 1
+	}
+	// no conclusion so check the next packet
+	return 3
+}
+
+func iterateOverSignalList() bool {
+	firstLen := len(firstSignal)
+	secondLen := len(secondSignal)
+	max := firstLen
+	if secondLen < firstLen {
+		max = secondLen
+	}
+	firstIndex := 0
+	secondIndex := 0
+	for i := 0; i < max; i++ {
+		firstSignalMessage := firstSignal[firstIndex]
+		secondSignalMessage := secondSignal[secondIndex]
+
+		tempFirstIndex := firstSignal.skipToNextValidSignal(firstIndex)
+		tempSecondIndex := secondSignal.skipToNextValidSignal(secondIndex)
+
+		if secondIndex != tempSecondIndex {
+			secondIndex = tempSecondIndex
+			secondSignalMessage = secondSignal[secondIndex]
+		}
+
+		if firstIndex != tempFirstIndex {
+			firstIndex = tempFirstIndex
+			firstSignalMessage = firstSignal[firstIndex]
+		}
+
+		maxPacketLen := len(firstSignalMessage.packets)
+		if len(secondSignalMessage.packets) < len(firstSignalMessage.packets) {
+			maxPacketLen = len(secondSignalMessage.packets)
+		}
+
+		if secondIndex == maxPacketLen && len(secondSignalMessage.packets) == 0 {
+			return false
+		}
+
+		if firstIndex == maxPacketLen && len(firstSignalMessage.packets) == 0 {
+			return true
+		}
+
+		option := isPacketOrdered(firstIndex, secondIndex, maxPacketLen)
+		if option == 1 {
+			return true
+		}
+		if option == 2 {
+			return false
+		}
+	}
+	return false
+}
+
 func main() {
 	f, err := os.Open(fileName)
 	errHandler(err)
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	// counter := 1
+	pairCounter := 1
+	sum := 0
 
 	for scanner.Scan() {
 		rawInput := scanner.Text()
@@ -89,6 +195,13 @@ func main() {
 			//implement the signal comparison here
 			//reset the signal counter
 			signalCounter = 1
+			fmt.Println(firstSignal)
+			fmt.Println(secondSignal)
+			if iterateOverSignalList() {
+				sum += pairCounter
+			}
+			//increment the pair counter
+			pairCounter++
 			//reset the signal list var
 			firstSignal = []signal{}
 			secondSignal = []signal{}
@@ -96,16 +209,17 @@ func main() {
 		}
 		if signalCounter == 1 {
 			//process first signal input
-			fmt.Println("1 : ", rawInput)
+			// fmt.Println("1 : ", rawInput)
 			firstSignal.insert(rawInput)
 			signalCounter++
-			fmt.Println(firstSignal)
+			// fmt.Println(firstSignal)
 		} else {
 			//process second signal input
-			fmt.Println("2 : ", rawInput)
+			// fmt.Println("2 : ", rawInput)
 			secondSignal.insert(rawInput)
 			signalCounter++
-			fmt.Println(secondSignal)
+			// fmt.Println(secondSignal)
 		}
 	}
+	fmt.Println(sum)
 }
