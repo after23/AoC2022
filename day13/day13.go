@@ -44,7 +44,7 @@ func (signalL *signalList) appenItem(input []string, rawInput, target string) st
 
 func (signalL *signalList) insert(rawInput string) {
 	for len(rawInput) > 0 {
-		re := regexp.MustCompile(`(?U)^,*\[[\d,]*\]|(^[\[,].,)(\d|\[)|^,\d|^\d[,\]\[]|[\[\],]`)
+		re := regexp.MustCompile(`(?U)^,*\[[\d,]*\]|(^[\[,].,|^[\[,]\d+,)(\d|\[)|^.\d\d|^,\d|^\d+[,\]\[]|[\[\],]`)
 		reInt := regexp.MustCompile(`\d+`)
 		res := re.FindStringSubmatch(rawInput)
 		if res[1] != "" {
@@ -86,12 +86,13 @@ func main() {
 	for scanner.Scan() {
 		rawInput := scanner.Text()
 		if rawInput == "" {
+			//implement the signal comparison here
 			//reset the signal counter
 			signalCounter = 1
 			//reset the signal list var
 			firstSignal = []signal{}
 			secondSignal = []signal{}
-			continue // or do something
+			continue
 		}
 		if signalCounter == 1 {
 			//process first signal input
