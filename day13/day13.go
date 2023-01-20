@@ -78,7 +78,7 @@ func (signalL *signalList) insert(rawInput string) {
 // SkipToNextValidSignal is used to return the index of the next signal with valid packets // Skip signals that has -1 as packet's value
 func (signals signalList) skipToNextValidSignal(index int) int {
 	if len(signals[index].packets) == 0 {
-		return 0
+		return -1
 	}
 	signal := signals[index]
 	if !signal.isSkipSignal() {
@@ -98,6 +98,9 @@ func (signals signalList) skipToNextValidSignal(index int) int {
 // isSkipSignal is used to check if a signal's packet is valid or not
 // non valid packet has value of -1
 func (signal signal) isSkipSignal() bool {
+	if len(signal.packets) == 0 {
+		return false
+	}
 	if signal.packets[0] == -1 {
 		return true
 	}
@@ -110,6 +113,14 @@ func (signal signal) isSkipSignal() bool {
 func isPacketOrdered(firstIndex, secondIndex, max int) int {
 	firstPacket := firstSignal[firstIndex].packets
 	secondPacket := secondSignal[secondIndex].packets
+	if max == 0 {
+		if len(firstPacket) == 0 && len(secondPacket) != 0 {
+			return 1
+		}
+		if len(secondPacket) == 0 && len(firstPacket) != 0 {
+			return 2
+		}
+	}
 	for i := 0; i < max; i++ {
 		firstItem := firstPacket[i]
 		secondItem := secondPacket[i]
@@ -125,6 +136,11 @@ func isPacketOrdered(firstIndex, secondIndex, max int) int {
 	// first signal run out of item so it is ordered
 	if max == len(firstPacket) && max != len(secondPacket) {
 		return 1
+	}
+
+	// second signal run out of item so it is not ordered correctly
+	if max == len(secondPacket) && max != len(firstPacket) {
+		return 2
 	}
 	// no conclusion so check the next packet
 	return 3
@@ -146,12 +162,12 @@ func iterateOverSignalList() bool {
 		tempFirstIndex := firstSignal.skipToNextValidSignal(firstIndex)
 		tempSecondIndex := secondSignal.skipToNextValidSignal(secondIndex)
 
-		if secondIndex != tempSecondIndex {
+		if secondIndex != tempSecondIndex && tempSecondIndex != -1 {
 			secondIndex = tempSecondIndex
 			secondSignalMessage = secondSignal[secondIndex]
 		}
 
-		if firstIndex != tempFirstIndex {
+		if firstIndex != tempFirstIndex && tempFirstIndex != -1 {
 			firstIndex = tempFirstIndex
 			firstSignalMessage = firstSignal[firstIndex]
 		}
@@ -176,6 +192,14 @@ func iterateOverSignalList() bool {
 		if option == 2 {
 			return false
 		}
+		firstIndex++
+		secondIndex++
+		if firstLen != secondLen && firstIndex == max {
+			return true
+		}
+		if secondLen != firstLen && secondIndex == max {
+			return false
+		}
 	}
 	return false
 }
@@ -195,10 +219,11 @@ func main() {
 			//implement the signal comparison here
 			//reset the signal counter
 			signalCounter = 1
-			fmt.Println(firstSignal)
-			fmt.Println(secondSignal)
+			// fmt.Println(firstSignal)
+			// fmt.Println(secondSignal)
 			if iterateOverSignalList() {
 				sum += pairCounter
+				// fmt.Println(pairCounter)
 			}
 			//increment the pair counter
 			pairCounter++
