@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const fileName = "fixpls.in"
+const fileName = "sample.in"
 
 type signal struct {
 	packets []int
