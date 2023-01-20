@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const fileName = "sample.in"
+const fileName = "fixpls.in"
 
 type signal struct {
 	packets []int
@@ -124,6 +124,7 @@ func isPacketOrdered(firstIndex, secondIndex, max int) int {
 	for i := 0; i < max; i++ {
 		firstItem := firstPacket[i]
 		secondItem := secondPacket[i]
+		fmt.Printf("%d vs %d\n", firstItem, secondItem)
 		// false ordered
 		if secondItem < firstItem {
 			return 2
@@ -219,11 +220,10 @@ func main() {
 			//implement the signal comparison here
 			//reset the signal counter
 			signalCounter = 1
-			// fmt.Println(firstSignal)
-			// fmt.Println(secondSignal)
+			fmt.Println(firstSignal)
+			fmt.Println(secondSignal)
 			if iterateOverSignalList() {
 				sum += pairCounter
-				// fmt.Println(pairCounter)
 			}
 			//increment the pair counter
 			pairCounter++
@@ -247,4 +247,5 @@ func main() {
 		}
 	}
 	fmt.Println(sum)
+
 }
